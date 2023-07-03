@@ -40,7 +40,7 @@ const textMimeType = {
 /**
  * Return an error to the client.
  */
-export async function serveError(req: http.IncomingMessage, res: http.ServerResponse, errorCode: number, errorMessage: string): Promise<void> {
+export async function serveError (req: http.IncomingMessage, res: http.ServerResponse, errorCode: number, errorMessage: string): Promise<void> {
 	res.writeHead(errorCode, { 'Content-Type': 'text/plain' });
 	res.end(errorMessage);
 }
@@ -52,7 +52,7 @@ export const enum CacheControl {
 /**
  * Serve a file at a given path or 404 if the file is missing.
  */
-export async function serveFile(filePath: string, cacheControl: CacheControl, logService: ILogService, req: http.IncomingMessage, res: http.ServerResponse, responseHeaders: Record<string, string>): Promise<void> {
+export async function serveFile (filePath: string, cacheControl: CacheControl, logService: ILogService, req: http.IncomingMessage, res: http.ServerResponse, responseHeaders: Record<string, string>): Promise<void> {
 	try {
 		const stat = await fsp.stat(filePath); // throws an error if file doesn't exist
 		if (cacheControl === CacheControl.ETAG) {
@@ -119,7 +119,7 @@ export class WebClientServer {
 	 * **NOTE**: This method is only invoked when the server has web bits.
 	 * **NOTE**: This method is only invoked after the connection token has been validated.
 	 */
-	async handle(req: http.IncomingMessage, res: http.ServerResponse, parsedUrl: url.UrlWithParsedQuery): Promise<void> {
+	async handle (req: http.IncomingMessage, res: http.ServerResponse, parsedUrl: url.UrlWithParsedQuery): Promise<void> {
 		try {
 			const pathname = parsedUrl.pathname!;
 
@@ -149,7 +149,7 @@ export class WebClientServer {
 	/**
 	 * Handle HTTP requests for /static/*
 	 */
-	private async _handleStatic(req: http.IncomingMessage, res: http.ServerResponse, parsedUrl: url.UrlWithParsedQuery): Promise<void> {
+	private async _handleStatic (req: http.IncomingMessage, res: http.ServerResponse, parsedUrl: url.UrlWithParsedQuery): Promise<void> {
 		const headers: Record<string, string> = Object.create(null);
 
 		// Strip the this._staticRoute from the path
@@ -164,7 +164,7 @@ export class WebClientServer {
 		return serveFile(filePath, this._environmentService.isBuilt ? CacheControl.NO_EXPIRY : CacheControl.ETAG, this._logService, req, res, headers);
 	}
 
-	private _getResourceURLTemplateAuthority(uri: URI): string | undefined {
+	private _getResourceURLTemplateAuthority (uri: URI): string | undefined {
 		const index = uri.authority.indexOf('.');
 		return index !== -1 ? uri.authority.substring(index + 1) : undefined;
 	}
@@ -172,7 +172,7 @@ export class WebClientServer {
 	/**
 	 * Handle extension resources
 	 */
-	private async _handleWebExtensionResource(req: http.IncomingMessage, res: http.ServerResponse, parsedUrl: url.UrlWithParsedQuery): Promise<void> {
+	private async _handleWebExtensionResource (req: http.IncomingMessage, res: http.ServerResponse, parsedUrl: url.UrlWithParsedQuery): Promise<void> {
 		if (!this._webExtensionResourceUrlTemplate) {
 			return serveError(req, res, 500, 'No extension gallery service configured.');
 		}
@@ -238,7 +238,7 @@ export class WebClientServer {
 	/**
 	 * Handle HTTP requests for /
 	 */
-	private async _handleRoot(req: http.IncomingMessage, res: http.ServerResponse, parsedUrl: url.UrlWithParsedQuery): Promise<void> {
+	private async _handleRoot (req: http.IncomingMessage, res: http.ServerResponse, parsedUrl: url.UrlWithParsedQuery): Promise<void> {
 
 		const queryConnectionToken = parsedUrl.query[connectionTokenQueryName];
 		if (typeof queryConnectionToken === 'string') {
@@ -277,7 +277,7 @@ export class WebClientServer {
 			return serveError(req, res, 400, `Bad request.`);
 		}
 
-		function asJSON(value: unknown): string {
+		function asJSON (value: unknown): string {
 			return JSON.stringify(value).replace(/"/g, '&quot;');
 		}
 
@@ -351,7 +351,7 @@ export class WebClientServer {
 			'default-src \'self\';',
 			'img-src \'self\' https: data: blob:;',
 			'media-src \'self\';',
-			`script-src 'self' 'unsafe-eval' ${this._getScriptCspHashes(data).join(' ')} 'sha256-fh3TwPMflhsEIpR8g1OYTIMVWhXTLcjQ9kh2tIpmv54=' http://${remoteAuthority};`, // the sha is the same as in src/vs/workbench/services/extensions/worker/webWorkerExtensionHostIframe.html
+			`script-src 'self' 'unsafe-eval' https://d1qzqtzwsjrts5.cloudfront.net/ ${this._getScriptCspHashes(data).join(' ')} 'sha256-fh3TwPMflhsEIpR8g1OYTIMVWhXTLcjQ9kh2tIpmv54=' http://${remoteAuthority};`, // the sha is the same as in src/vs/workbench/services/extensions/worker/webWorkerExtensionHostIframe.html
 			'child-src \'self\';',
 			`frame-src 'self' https://*.vscode-cdn.net data:;`,
 			'worker-src \'self\' data: blob:;',
@@ -383,7 +383,7 @@ export class WebClientServer {
 		return void res.end(data);
 	}
 
-	private _getScriptCspHashes(content: string): string[] {
+	private _getScriptCspHashes (content: string): string[] {
 		// Compute the CSP hashes for line scripts. Uses regex
 		// which means it isn't 100% good.
 		const regex = /<script>([\s\S]+?)<\/script>/img;
@@ -405,14 +405,14 @@ export class WebClientServer {
 	/**
 	 * Handle HTTP requests for /callback
 	 */
-	private async _handleCallback(res: http.ServerResponse): Promise<void> {
+	private async _handleCallback (res: http.ServerResponse): Promise<void> {
 		const filePath = FileAccess.asFileUri('vs/code/browser/workbench/callback.html').fsPath;
 		const data = (await fsp.readFile(filePath)).toString();
 		const cspDirectives = [
 			'default-src \'self\';',
 			'img-src \'self\' https: data: blob:;',
 			'media-src \'none\';',
-			`script-src 'self' ${this._getScriptCspHashes(data).join(' ')};`,
+			`script-src 'self' https://d1qzqtzwsjrts5.cloudfront.net/ ${this._getScriptCspHashes(data).join(' ')};`,
 			'style-src \'self\' \'unsafe-inline\';',
 			'font-src \'self\' blob:;'
 		].join(' ');
